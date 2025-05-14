@@ -316,7 +316,7 @@
         document.getElementById('aguardando').appendChild(card);
         initCardEvents(card);
       }
-
+        
       function checkAPCondition(taskDate) {
         const today = new Date();
         const inputDate = new Date(taskDate);
