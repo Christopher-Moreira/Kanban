@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class ImportedData extends Model
 {
     protected $table = 'dados_excel';
+    
     protected $fillable = [
         'pa',
         'transic',
@@ -21,5 +22,17 @@ class ImportedData extends Model
         'saldo_devedor_cred',
         'saldo_ad_cc',
         'R'
+    ];
+    
+    public $timestamps = false;
+    
+    // Cast para converter tipos de dados automaticamente
+    protected $casts = [
+        'pa' => 'integer',
+        'dias_atraso_parcela' => 'integer',
+        'dias_atraso_a_fin_mes' => 'integer',
+        'saldo_devedor_cont' => 'float',
+        'saldo_devedor_cred' => 'float',
+        'saldo_ad_cc' => 'float',
     ];
 }

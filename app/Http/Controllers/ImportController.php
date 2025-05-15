@@ -17,7 +17,7 @@ class ImportController extends Controller
     public function import(Request $request)
     {
         $request->validate([
-            'file' => 'required|mimes:xlsx,xls|max:2048'
+            'file'=>'required|mimes:xlsx,xls,csv,txt|max:2048'
         ]);
 
         // Aumentar o tempo limite para 5 minutos
@@ -32,8 +32,13 @@ class ImportController extends Controller
 
             $import = new DataImport();
             
-            // Importar com chunk para melhor performance
-            Excel::import($import, $file, null, \Maatwebsite\Excel\Excel::XLSX);
+            // Identificar o formato do arquivo
+            $extension = $file->getClientOriginalExtension();
+            if ($extension == 'csv' || $extension == 'txt') {
+                Excel::import($import, $file, null, \Maatwebsite\Excel\Excel::CSV);
+            } else {
+                Excel::import($import, $file, null, \Maatwebsite\Excel\Excel::XLSX);
+            }
             
             $importedRows = $import->getRowCount();
 
@@ -42,17 +47,17 @@ class ImportController extends Controller
 
             $failures = $import->failures();
 
-            if ($failures->isNotEmpty()) {
+            if($failures->isNotEmpty()){
                 return back()
-                    ->with('success', "Importado {$importedRows} linhas com sucesso!")
-                    ->with('failures', $failures);
+                    ->with('success',"Importado {$importedRows} linhas com sucesso!")
+                    ->with('failures',$failures);
             }
 
-            return back()->with('success', "Dados importados com sucesso! {$importedRows} registros processados.");
+            return back()->with('success',"Dados importados com sucesso! {$importedRows} registros processados.");
 
-        } catch (\Exception $e) {
+        } catch(\Exception $e){
             // Restaurar o nível de logs em caso de erro
-            if (isset($originalLogLevel)) {
+            if(isset($originalLogLevel)){
                 Log::getLogger()->getHandlers()[0]->setLevel($originalLogLevel);
             }
 
@@ -61,18 +66,18 @@ class ImportController extends Controller
             Log::error('Trace: '.$e->getTraceAsString());
 
             $errorMsg = $this->getFriendlyErrorMessage($e);
-            return back()->with('error', $errorMsg);
+            return back()->with('error',$errorMsg);
         }
     }
 
     private function getFriendlyErrorMessage(\Exception $e): string
     {
-        return match (true) {
-            str_contains($e->getMessage(), 'preg_match()') => "Formato de arquivo inválido. Verifique cabeçalhos e valores.",
-            str_contains($e->getMessage(), 'zip member') => "Arquivo corrompido. Salve novamente no Excel como .xlsx e tente novamente.",
-            str_contains($e->getMessage(), 'Undefined array key') => "Cabeçalhos incorretos. Verifique se as colunas do arquivo correspondem ao modelo esperado.",
-            str_contains($e->getMessage(), 'Maximum execution time') => "O arquivo é muito grande. Divida em arquivos menores ou contate o administrador.",
-            default => "Erro ao importar: " . $e->getMessage(),
+        return match(true){
+            str_contains($e->getMessage(),'preg_match()')=>"Formato de arquivo inválido. Verifique cabeçalhos e valores.",
+            str_contains($e->getMessage(),'zip member')=>"Arquivo corrompido. Salve novamente no Excel como .xlsx e tente novamente.",
+            str_contains($e->getMessage(),'Undefined array key')=>"Cabeçalhos incorretos. Verifique se as colunas do arquivo correspondem ao modelo esperado.",
+            str_contains($e->getMessage(),'Maximum execution time')=>"O arquivo é muito grande. Divida em arquivos menores ou contate o administrador.",
+            default=>"Erro ao importar: ".$e->getMessage(),
         };
     }
 }
