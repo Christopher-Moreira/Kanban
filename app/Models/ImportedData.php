@@ -35,5 +35,7 @@ class ImportedData extends Model
         'saldo_devedor_cont' => 'float',
         'saldo_devedor_cred' => 'float',
         'saldo_ad_cc' => 'float',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime'
     ];
 }
