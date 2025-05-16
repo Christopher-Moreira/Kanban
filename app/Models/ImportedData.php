@@ -21,7 +21,8 @@ class ImportedData extends Model
         'saldo_devedor_cont',
         'saldo_devedor_cred',
         'saldo_ad_cc',
-        'R'
+        'R',
+        'status',
     ];
     
     public $timestamps = false;

@@ -4,94 +4,186 @@ namespace App\Http\Controllers;
 
 use App\Models\ImportedData;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class KanbanController extends Controller
 {
     /**
-     * Exibe a página Kanban com os dados organizados
+     * Exibe a página do quadro Kanban com os dados
      */
     public function index()
     {
-        // Busca todos os dados do modelo
-        $allData = ImportedData::all();
-        
-        // Organiza os dados em colunas Kanban baseadas no nível de classificação
-
-        $kanbanColumns = [
-            'A' => $allData->where('nivel_clas', 'A'),
-            'B' => $allData->where('nivel_clas', 'B'),
-            'C' => $allData->where('nivel_clas', 'C'),
-            'D' => $allData->where('nivel_clas', 'D'),
-            'Outros' => $allData->whereNotIn('nivel_clas', ['A', 'B', 'C', 'D']),
+        // Obter os dados para o Kanban divididos por status
+        $data = [
+            'aguardando' => $this->getCardsByStatus('aguardando'),
+            'atendendo' => $this->getCardsByStatus('atendendo'),
+            'realizado' => $this->getCardsByStatus('realizado')
         ];
         
-        // Alternativa: agrupar por faixa de dias de atraso
-        /*
-        $kanbanColumns = [
-            'Em dia' => $allData->where('dias_atraso_parcela', '<=', 0),
-            '1-30 dias' => $allData->whereBetween('dias_atraso_parcela', [1, 30]),
-            '31-60 dias' => $allData->whereBetween('dias_atraso_parcela', [31, 60]),
-            '61-90 dias' => $allData->whereBetween('dias_atraso_parcela', [61, 90]),
-            '+90 dias' => $allData->where('dias_atraso_parcela', '>', 90),
-        ];
-        */
-        
-        return view('kanban.index', compact('kanbanColumns'));
+        return view('kanban.index', compact('data'));
     }
-
+    
     /**
-     * Atualiza o status/nível de um item no Kanban (via AJAX)
+     * Obtém os cartões de acordo com o status
      */
-    public function update(Request $request, $id)
+    private function getCardsByStatus($status)
+    {
+        // Consulta base para obter os dados
+        $query = ImportedData::select(
+            'id',
+            'cliente as name',
+            'cpf_cnpj',
+            'contrato',
+            'saldo_devedor_cont as contractValue',
+            'saldo_ad_cc as installmentValue',
+            'dias_atraso_parcela as priority',
+            'R as responsible',
+            'created_at as taskDate',
+            'status'
+        );
+        
+        // Definir o status apropriado com base nas regras de negócio
+        switch ($status) {
+            case 'aguardando':
+                // Registros sem atendimento ou com status aguardando
+                return $query->where(function($q) {
+                    $q->whereNull('status')->orWhere('status', 'aguardando');
+                })->get();
+                
+            case 'atendendo':
+                // Registros em andamento/sendo atendidos
+                return $query->where('status', 'atendendo')->get();
+                
+            case 'realizado':
+                // Registros concluídos
+                return $query->where('status', 'realizado')->get();
+                
+            default:
+                return collect();
+        }
+    }
+    
+    /**
+     * Atualiza o status de uma tarefa (via AJAX)
+     */
+    public function updateStatus(Request $request)
     {
         $validated = $request->validate([
-            'nivel_clas' => 'required|in:A,B,C,D,E,F',
+            'id' => 'required|exists:dados_excel,id',
+            'status' => 'required|in:aguardando,atendendo,realizado'
         ]);
         
-        $item = ImportedData::findOrFail($id);
-        $item->update($validated);
+        $record = ImportedData::findOrFail($validated['id']);
+        $record->status = $validated['status'];
+        $record->save();
+        
+        return response()->json(['success' => true]);
+    }
+    
+    /**
+     * Adiciona uma nova tarefa ao quadro Kanban
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'taskName' => 'required|string|max:255',
+            'contractValue' => 'nullable|numeric',
+            'installmentValue' => 'nullable|numeric',
+            'taskPriority' => 'required|string|in:high,medium,low',
+            'taskResponsible' => 'nullable|string|max:10',
+            'taskDate' => 'required|date',
+            'cpf_cnpj' => 'nullable|string|max:18',
+            'contrato' => 'nullable|string|max:50'
+        ]);
+        
+        // Converter prioridade para dias de atraso
+        $diasAtraso = match($validated['taskPriority']) {
+            'high' => 90,
+            'medium' => 31,
+            'low' => 60,
+            default => 31
+        };
+        
+        // Criar novo registro
+        $record = new ImportedData();
+        $record->cliente = $validated['taskName'];
+        $record->cpf_cnpj = $validated['cpf_cnpj'] ?? null;
+        $record->contrato = $validated['contrato'] ?? null;
+        $record->saldo_devedor_cont = $validated['contractValue'] ?? 0;
+        $record->saldo_ad_cc = $validated['installmentValue'] ?? 0;
+        $record->dias_atraso_parcela = $diasAtraso;
+        $record->R = $validated['taskResponsible'];
+        $record->created_at = $validated['taskDate'];
+        $record->status = 'aguardando';
+        $record->save();
         
         return response()->json([
             'success' => true,
-            'message' => 'Item atualizado com sucesso!'
+            'record' => [
+                'id' => $record->id,
+                'name' => $record->cliente,
+                'contractValue' => number_format($record->saldo_devedor_cont, 2, ',', '.'),
+                'installmentValue' => number_format($record->saldo_ad_cc, 2, ',', '.'),
+                'priority' => $diasAtraso,
+                'responsible' => $record->R,
+                'taskDate' => $record->created_at,
+                'status' => $record->status
+            ]
         ]);
     }
-
+    
     /**
-     * Filtra os dados do Kanban com base em critérios
+     * Obtém detalhes de uma tarefa específica
      */
-    public function filter(Request $request)
+    public function show($id)
     {
-        $query = ImportedData::query();
+        $record = ImportedData::findOrFail($id);
         
-        // Aplicar filtros conforme os parâmetros recebidos
-        if ($request->has('pa') && $request->pa) {
-            $query->where('pa', 'like', '%' . $request->pa . '%');
-        }
+        return response()->json([
+            'id' => $record->id,
+            'name' => $record->cliente,
+            'cpf_cnpj' => $record->cpf_cnpj,
+            'contrato' => $record->contrato,
+            'contractValue' => number_format($record->saldo_devedor_cont, 2, ',', '.'),
+            'installmentValue' => number_format($record->saldo_ad_cc, 2, ',', '.'),
+            'priority' => $record->dias_atraso_parcela,
+            'responsible' => $record->R,
+            'taskDate' => $record->created_at,
+            'status' => $record->status,
+            'pa' => $record->pa,
+            'transic' => $record->transic,
+            'nivel_clas' => $record->nivel_clas,
+            'mod_produto' => $record->mod_produto,
+            'saldo_devedor_cred' => number_format($record->saldo_devedor_cred, 2, ',', '.')
+        ]);
+    }
+    
+    /**
+     * Remove uma tarefa do quadro Kanban
+     */
+    public function destroy($id)
+    {
+        $record = ImportedData::findOrFail($id);
+        $record->delete();
         
-        if ($request->has('cliente') && $request->cliente) {
-            $query->where('cliente', 'like', '%' . $request->cliente . '%');
-        }
-        
-        if ($request->has('dias_atraso_min') && $request->dias_atraso_min) {
-            $query->where('dias_atraso_parcela', '>=', $request->dias_atraso_min);
-        }
-        
-        if ($request->has('dias_atraso_max') && $request->dias_atraso_max) {
-            $query->where('dias_atraso_parcela', '<=', $request->dias_atraso_max);
-        }
-        
-        $filteredData = $query->get();
-        
-        // Reorganiza os dados filtrados em colunas Kanban
-        $kanbanColumns = [
-            'A' => $filteredData->where('nivel_clas', 'A'),
-            'B' => $filteredData->where('nivel_clas', 'B'),
-            'C' => $filteredData->where('nivel_clas', 'C'),
-            'D' => $filteredData->where('nivel_clas', 'D'),
-            'Outros' => $filteredData->whereNotIn('nivel_clas', ['A', 'B', 'C', 'D']),
+        return response()->json(['success' => true]);
+    }
+    
+    /**
+     * Obtém estatísticas do quadro Kanban
+     */
+    public function getStatistics()
+    {
+        $statistics = [
+            'total' => ImportedData::count(),
+            'aguardando' => ImportedData::where(function($q) {
+                $q->whereNull('status')->orWhere('status', 'aguardando');
+            })->count(),
+            'atendendo' => ImportedData::where('status', 'atendendo')->count(),
+            'realizado' => ImportedData::where('status', 'realizado')->count(),
+            'valor_total' => ImportedData::sum('saldo_devedor_cont')
         ];
         
-        return view('kanban._kanban_columns', compact('kanbanColumns'))->render();
+        return response()->json($statistics);
     }
 }
