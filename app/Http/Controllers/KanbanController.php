@@ -48,4 +48,8 @@ class KanbanController extends Controller
         return view('layouts.kanban', compact('dados'));
 
     }
+
+    public function calc(){
+        
+    }
 }
