@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ImportedData;
 use Illuminate\Http\Request;
+use App\Models\ImportedData;
+use Illuminate\Database\Eloquent\Model;
+
 
 class KanbanController extends Controller
 {
     public function index()
     {
+
         // Agrupar os dados por status
         $cards = ImportedData::all()->groupBy('status');
         
@@ -39,5 +42,10 @@ class KanbanController extends Controller
     {
         $card = ImportedData::findOrFail($id);
         return view('kanban.show', compact('card'));
+
+        $dados = ImportedData::all(); // Pega todos os dados da tabela
+
+        return view('layouts.kanban', compact('dados'));
+
     }
 }
