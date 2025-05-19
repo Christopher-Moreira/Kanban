@@ -3,28 +3,16 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 
+// Rotas do Kanban
 
-Route::get('/kanban ', [AuthController::class, 'showKanban'])->name('kanban');
+Route::get('/kanban', [App\Http\Controllers\KanbanController::class, 'index'])->name('kanban.index');
+Route::post('/kanban/update', [App\Http\Controllers\KanbanController::class, 'update'])->name('kanban.update');
+Route::get('/kanban/{id}', [App\Http\Controllers\KanbanController::class, 'show'])->name('kanban.show');
 
-use App\Http\Controllers\ImportController;
-use App\Http\Controllers\KanbanController;
+//Change atribuiçao
+//Route::put('/atualizar-status/{id}', [KanbanController::class, 'atualizarStatus']);
 
-Route::get('/', function () {
-    return redirect()->route('kanban.index');
-});
-
-// Rotas para o Kanban
-Route::prefix('kanban')->group(function () {
-    Route::get('/', [KanbanController::class, 'index'])->name('kanban.index');
-    Route::post('/', [KanbanController::class, 'store'])->name('kanban.store');
-    Route::post('/update-status', [KanbanController::class, 'updateStatus'])->name('kanban.updateStatus');
-    Route::get('/statistics', [KanbanController::class, 'getStatistics'])->name('kanban.statistics');
-    Route::get('/{id}', [KanbanController::class, 'show'])->name('kanban.show');
-    Route::delete('/{id}', [KanbanController::class, 'destroy'])->name('kanban.destroy');
-});
-
-//rotas de teste para Request do import
-
+// Rotas de importação
 Route::get('/import', [ImportController::class, 'showImportForm'])->name('import');
 Route::post('/import', [ImportController::class, 'import'])->name('import');
 

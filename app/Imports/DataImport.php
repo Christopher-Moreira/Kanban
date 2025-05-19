@@ -76,7 +76,7 @@ class DataImport implements ToModel, WithHeadingRow, WithValidation, WithBatchIn
                 
                 // Caso não encontre correspondência exata, procura por correspondências insensíveis a caso
                 foreach ($row as $key => $value) {
-                    if (rcasecmp($key, $possibleKey) === 0 || 
+                    if (strcasecmp($key, $possibleKey) === 0 || 
                         strcasecmp(Str::slug(str_replace(['.', ' '], ['', '_'], $key), '_'), $possibleKey) === 0) {
                         $normalized[$normalizedKey] = $value;
                         $found = true;

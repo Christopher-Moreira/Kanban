@@ -10,12 +10,18 @@
         "laravel/framework": "^9.19",
         "laravel/sanctum": "^3.0",
 <<<<<<< HEAD
+<<<<<<< HEAD
         "laravel/tinker": "^2.7"
 =======
         "laravel/tinker": "^2.7",
         "maatwebsite/excel": "^3.1",
         "psr/simple-cache": "1.0"
 >>>>>>> develop
+=======
+        "laravel/tinker": "^2.7",
+        "maatwebsite/excel": "^3.1",
+        "psr/simple-cache": "1.0"
+>>>>>>> 6cc37ef3917d649dab46ab1100ecf88d0770c72f
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",
