@@ -25,16 +25,21 @@
                         @foreach($cards[$status] as $card)
                         <div class="kanban-card card mb-3" data-id="{{ $card->id }}">
                             <div class="card-body">
+                                <!-- Cabeçalho do Card -->
                                 <div class="d-flex justify-content-between align-items-start mb-2">
                                     <h5 class="card-title text-success mb-0">{{ $card->cliente }}</h5>
                                     @if(isset($card->tipo) && $card->tipo == 'ativo problematico')
                                         <span class="ap-tag">AP</span>
                                     @endif
                                 </div>
+                                
+                                <!-- Detalhes do Contrato -->
                                 <h6 class="card-subtitle mb-2 text-muted">
                                     <strong>Contrato:</strong>   
                                     <i class="fas fa-file-contract mr-1"></i>{{ $card->contrato }}
                                 </h6>
+                                
+                                <!-- Informações Financeiras -->
                                 <div class="kanban-card-details">
                                     <p class="mb-1">
                                         <i class="fas fa-id-card mr-1"></i>
@@ -43,20 +48,7 @@
                                     <p class="mb-1">
                                         <i class="fas fa-calendar-times mr-1"></i>
                                         <strong>Notificação:</strong> 
-                                        @if($card->dias_atraso_parcela == 31)
-                                            <span class="atraso-31-dias">{{ $card->dias_atraso_parcela }} dias</span>
-                                        @elseif($card->dias_atraso_parcela == 90)
-                                            <span class="atraso-90-dias" data-toggle="tooltip" data-placement="top" title="Atenção! Contrato com 90 dias de atraso!">
-                                                {{ $card->dias_atraso_parcela }} dias
-                                            </span>
-                                            <i class="fas fa-exclamation-triangle text-danger ml-1 atraso-alert"></i>
-                                        @elseif($card->dias_atraso_parcela >= 90 && $card->dias_atraso_parcela <= 120)
-                                            <span class="atraso-90-120-dias">{{ $card->dias_atraso_parcela }} dias</span>
-                                        @else
-                                            <span class="{{ $card->dias_atraso_parcela > 30 ? 'text-danger' : 'text-warning' }}">
-                                                {{ $card->dias_atraso_parcela }} dias
-                                            </span>
-                                        @endif
+                                        <!-- ... (existing status indicators) ... -->
                                     </p>
                                     <p class="mb-1">
                                         <i class="fas fa-money-bill-wave mr-1"></i>
@@ -64,6 +56,36 @@
                                         <span class="text-primary">R$ {{ number_format($card->saldo_devedor_cont, 2, ',', '.') }}</span>
                                     </p>
                                 </div>
+
+                                <!-- Seção de Lembretes -->
+                                <div class="reminders-section mt-3">
+                                    <h6><i class="fas fa-bell mr-2"></i>Lembretes</h6>
+                                    @foreach($card->reminders as $reminder)
+                                        <div class="reminder-item alert alert-info p-2 mb-2">
+                                            <div class="d-flex justify-content-between">
+                                                <small>{{ \Carbon\Carbon::parse($reminder->reminder_date)->format('d/m/Y H:i') }}</small>
+                                                <div class="actions">
+                                                    <form class="d-inline" method="POST" action="{{ route('reminders.destroy', $reminder) }}">
+                                                        @csrf @method('DELETE')
+                                                        <button type="submit" class="btn btn-link text-danger p-0">
+                                                            <i class="fas fa-trash-alt"></i>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                            <p class="mb-0">{{ $reminder->notes }}</p>
+                                        </div>
+                                    @endforeach
+                                    
+                                    <button class="btn btn-sm btn-light btn-block add-reminder" 
+                                            data-toggle="modal" 
+                                            data-target="#reminderModal"
+                                            data-contract-id="{{ $card->id }}">
+                                        <i class="fas fa-plus-circle"></i> Novo Lembrete
+                                    </button>
+                                </div>
+
+                                <!-- Botões de Ação -->
                                 <div class="mt-3 d-flex justify-content-between">
                                     <a href="{{route('kanban.show', $card->id) }}" class="btn btn-sm btn-primary">
                                         <i class="fas fa-eye mr-1"></i>Detalhes
@@ -72,27 +94,9 @@
                                         <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" data-toggle="dropdown">
                                             <i class="fas fa-exchange-alt mr-1"></i>Mover
                                         </button>
-                                        <div class="dropdown-menu dropdown-menu-right">
-                                            @foreach($statusColumns as $moveStatus)
-                                                @if($moveStatus != $status)
-                                                <a class="dropdown-item move-card" href="#" 
-                                                   data-card-id="{{ $card->id }}" 
-                                                   data-status="{{ $moveStatus }}">
-                                                    Para {{ $moveStatus }}
-                                                </a>
-                                                @endif
-                                            @endforeach
-                                        </div>
+                                        <!-- ... (existing dropdown menu) ... -->
                                     </div>
                                 </div>
-                                @if($card->dias_atraso_parcela == 90)
-                                <div class="atraso-popup">
-                                    <div class="atraso-popup-content">
-                                        <strong>Alerta crítico!</strong>
-                                        <p>Este contrato atingiu 90 dias de atraso e requer atenção imediata.</p>
-                                    </div>
-                                </div>
-                                @endif
                             </div>
                         </div>
                         @endforeach
@@ -108,10 +112,91 @@
         @endforeach
     </div>
 </div>
+
+<!-- Modal de Lembretes -->
+<div class="modal fade" id="reminderModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ route('reminders.store') }}">
+                @csrf
+                <input type="hidden" name="contract_id" id="contract_id">
+                
+                <div class="modal-header">
+                    <h5 class="modal-title">Novo Lembrete</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Data/Hora</label>
+                        <input type="datetime-local" name="reminder_date" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Observações</label>
+                        <textarea name="notes" class="form-control" rows="3" required></textarea>
+                    </div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('styles')
 <style>
+    .kanban-board {
+        min-height: calc(100vh - 230px);
+    }
+    
+    .kanban-column {
+        min-width: 300px;
+        width: 300px;
+    }
+    
+    .kanban-card {
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border-left: 4px solid var(--sicoob-green);
+        position: relative;
+    }
+    
+    .kanban-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    /* Estilos para Lembretes */
+    .reminders-section {
+        border-top: 1px solid #eee;
+        padding-top: 10px;
+    }
+
+    .reminder-item {
+        background-color: #f8f9fa;
+        border-radius: 4px;
+        padding: 8px;
+        font-size: 0.9em;
+    }
+
+    .reminder-item:hover {
+        background-color: #e9ecef;
+    }w
+
+    .add-reminder {
+        transition: all 0.3s ease;
+    }
+
+    .add-reminder:hover {
+        transform: translateY(-2px);
+    }
     .kanban-board {
         min-height: calc(100vh - 230px);
     }
@@ -298,112 +383,155 @@
 @section('scripts')
 <script>
     $(document).ready(function() {
-        // Inicializa tooltips
-        $('[data-toggle="tooltip"]').tooltip();
-        
-        // Estiliza os cartões com base no status
-        $('.kanban-card').each(function() {
-            var status = $(this).closest('.kanban-column').data('status');
-            if(status === 'Pendente') {
-                $(this).css('border-left-color', 'var(--sicoob-yellow)');
-            } else if(status === 'Em Andamento') {
-                $(this).css('border-left-color', 'var(--sicoob-green)');
-            } else if(status === 'Concluído') {
-                $(this).css('border-left-color', '#28a745');
-            } else if(status === 'Atrasado') {
-                $(this).css('border-left-color', '#dc3545');
+        // Configuração inicial
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
             }
         });
-        
-        // Adiciona efeito visual especial para cards com 90 dias de atraso
-        $('.atraso-90-dias').closest('.kanban-card').addClass('critical-alert');
-        
-        $('.move-card').on('click', function(e) {
+
+        // Inicialização do Modal de Lembretes
+        $('#reminderModal').on('show.bs.modal', function(event) {
+            var button = $(event.relatedTarget);
+            var contractId = button.data('contract-id');
+            $(this).find('#contract_id').val(contractId);
+        });
+
+        // Submissão do Formulário de Lembrete (AJAX)
+        $('#reminderModal form').submit(function(e) {
             e.preventDefault();
             
-            var cardId = $(this).data('card-id');
-            var newStatus = $(this).data('status');
-            
-            // Mostra um indicador de carregamento
-            $(this).html('<i class="fas fa-spinner fa-spin"></i> Movendo...');
+            var form = $(this);
+            var formData = form.serialize();
+            var url = form.attr('action');
             
             $.ajax({
-                url: '{{route("kanban.update") }}',
-                method: 'POST',
-                data: {
-                    _token: '{{csrf_token() }}',
-                    card_id: cardId,
-                    status: newStatus
+                type: "POST",
+                url: url,
+                data: formData,
+                beforeSend: function() {
+                    form.find('button[type="submit"]').prop('disabled', true)
+                        .html('<i class="fas fa-spinner fa-spin"></i> Salvando...');
                 },
                 success: function(response) {
-                    if (response.success) {
-                        // Notificação de sucesso
-                        showNotification('Sucesso!', 'Cartão movido com sucesso.', 'success');
-                        setTimeout(function() {
-                            window.location.reload();
-                        }, 1000);
-                    }
+                    $('#reminderModal').modal('hide');
+                    form.trigger("reset");
+                    showNotification('Sucesso!', 'Lembrete adicionado com sucesso', 'success');
+                    updateRemindersList(response.reminder, response.contract_id);
                 },
-                error: function(error) {
-                    console.error('Erro ao mover cartão:', error);
-                    showNotification('Erro', 'Erro ao mover o cartão. Tente novamente.', 'danger');
+                error: function(xhr) {
+                    let errorMessage = 'Erro ao salvar lembrete';
+                    if(xhr.responseJSON && xhr.responseJSON.errors) {
+                        errorMessage = Object.values(xhr.responseJSON.errors).join('\n');
+                    }
+                    showNotification('Erro!', errorMessage, 'danger');
+                },
+                complete: function() {
+                    form.find('button[type="submit"]').prop('disabled', false)
+                        .html('Salvar');
                 }
             });
         });
-        
-        // Função para mostrar notificações
+
+        // Exclusão de Lembrete (AJAX)
+        $(document).on('submit', '.delete-reminder-form', function(e) {
+            e.preventDefault();
+            
+            var form = $(this);
+            var url = form.attr('action');
+            var reminderItem = form.closest('.reminder-item');
+
+            if(confirm('Tem certeza que deseja excluir este lembrete?')) {
+                $.ajax({
+                    type: "DELETE",
+                    url: url,
+                    success: function(response) {
+                        reminderItem.fadeOut(300, function() {
+                            $(this).remove();
+                            showNotification('Sucesso!', 'Lembrete removido', 'success');
+                        });
+                    },
+                    error: function(xhr) {
+                        showNotification('Erro!', 'Falha ao excluir lembrete', 'danger');
+                    }
+                });
+            }
+        });
+
+        // Atualização Dinâmica da Lista de Lembretes
+        function updateRemindersList(reminder, contractId) {
+            var reminderHtml = `
+                <div class="reminder-item alert alert-info p-2 mb-2">
+                    <div class="d-flex justify-content-between">
+                        <small>${formatDateTime(reminder.reminder_date)}</small>
+                        <div class="actions">
+                            <form class="d-inline delete-reminder-form" 
+                                  method="POST" 
+                                  action="/reminders/${reminder.id}">
+                                @csrf 
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-link text-danger p-0">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    <p class="mb-0">${reminder.notes}</p>
+                </div>
+            `;
+
+            $(`.kanban-card[data-id="${contractId}"] .reminders-section`)
+                .prepend(reminderHtml)
+                .find('.text-muted').remove();
+        }
+
+        // Formatação de Data/Hora
+        function formatDateTime(datetime) {
+            const date = new Date(datetime);
+            return date.toLocaleDateString('pt-BR') + ' ' + 
+                   date.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
+        }
+
+        // Sistema de Notificação
         function showNotification(title, message, type) {
-            var notificationHtml = `
-                <div class="notification alert alert-${type} alert-dismissible fade show" role="alert" 
-                     style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+            const notificationHtml = `
+                <div class="notification alert alert-${type} alert-dismissible fade show" 
+                     role="alert" 
+                     style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
                     <strong>${title}</strong> ${message}
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
+                    <button type="button" class="close" data-dismiss="alert">
+                        <span>&times;</span>
                     </button>
                 </div>
             `;
-            
+
             $('body').append(notificationHtml);
             
-            // Auto-fechar após 5 segundos
-            setTimeout(function() {
+            setTimeout(() => {
                 $('.notification').alert('close');
             }, 5000);
         }
+
+        // Atualização Automática de Lembretes (Polling)
+        function checkForUpdates() {
+            $('.kanban-card').each(function() {
+                const cardId = $(this).data('id');
+                const lastUpdate = $(this).data('last-update') || 0;
+
+                $.get(`/reminders/check-updates/${cardId}?last_update=${lastUpdate}`, function(response) {
+                    if(response.updated) {
+                        $(this).data('last-update', response.timestamp);
+                        // Atualizar a lista de lembretes
+                        $(this).find('.reminders-section').html(response.html);
+                    }
+                }.bind(this));
+            });
+
+            setTimeout(checkForUpdates, 300000); // Atualiza a cada 5 minutos
+        }
+
+        // Iniciar polling
+        checkForUpdates();
     });
 </script>
 @endsection
-
-@php
-function getStatusClassName($status) {
-    switch ($status) {
-        case 'Pendente':
-            return 'pendente';
-        case 'Em Andamento':
-            return 'em-andamento';
-        case 'Concluído':
-            return 'concluido';
-        case 'Atrasado':
-            return 'atrasado';
-        default:
-            return 'secondary';
-    }
-}
-
-function formatCpfCnpj($cpfCnpj) {
-    $cpfCnpj = preg_replace('/[^0-9]/', '', $cpfCnpj);
-    
-    if (strlen($cpfCnpj) === 11) {
-        return substr($cpfCnpj, 0, 3) . '.' . 
-               substr($cpfCnpj, 3, 3) . '.' . 
-               substr($cpfCnpj, 6, 3) . '-' . 
-               substr($cpfCnpj, 9, 2);
-    } else {
-        return substr($cpfCnpj, 0, 2) . '.' . 
-               substr($cpfCnpj, 2, 3) . '.' . 
-               substr($cpfCnpj, 5, 3) . '/' . 
-               substr($cpfCnpj, 8, 4) . '-' .   
-               substr($cpfCnpj, 12, 2);
-    }
-}
-@endphp

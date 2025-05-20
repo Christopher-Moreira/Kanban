@@ -42,4 +42,10 @@ class ImportedData extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
+
+
+    public function reminders()
+    {
+        return $this->hasMany(Reminder::class);
+    }
 }

@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\KanbanController;
-
+use App\Http\Controllers\ReminderController;
 
 // Rotas do Kanban
 
@@ -20,4 +20,10 @@ Route::get('/import', [ImportController::class, 'showImportForm'])->name('import
 Route::post('/import', [ImportController::class, 'import'])->name('import');
 
 //visão para demonstração
-Route::get('/visual', [App\Http\Controllers\KanbanController::class, 'indexTwo'])->name('kanban.idea');
+//Route::get('/visual', [App\Http\Controllers\KanbanController::class, 'indexTwo'])->name('kanban.idea');
+
+    //Rotas Reminder
+    // routes/web.php
+Route::post('/reminders', [ReminderController::class, 'store'])->name('reminders.store');
+Route::put('/reminders/{reminder}', [ReminderController::class, 'update'])->name('reminders.update');
+Route::delete('/reminders/{reminder}', [ReminderController::class, 'destroy'])->name('reminders.destroy');
