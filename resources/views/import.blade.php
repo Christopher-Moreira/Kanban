@@ -144,14 +144,14 @@
                     @if(session('success'))
                         <div class="alert alert-success sicoob-alert">
                             <i class="fas fa-check-circle me-2"></i>
-                            {{ session('success') }}
+                            {{session('success') }}
                         </div>
                     @endif
 
                     @if(session('error'))
                         <div class="alert alert-danger sicoob-alert">
                             <i class="fas fa-exclamation-circle me-2"></i>
-                            {{ session('error') }}
+                            {{session('error') }}
                         </div>
                     @endif
 

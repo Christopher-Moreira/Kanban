@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Imports\DataImport;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Log;
+use Maatwebsite\Excel\Concerns\ToModel;
+use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 class ImportController extends Controller
 {
