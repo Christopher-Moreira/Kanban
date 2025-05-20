@@ -23,6 +23,10 @@ class ImportedData extends Model
         'saldo_ad_cc',
         'R',
         'status',
+        'observacao',
+        'aviso_nota',
+        'data_aviso',
+        
     ];
     
     public $timestamps = false;

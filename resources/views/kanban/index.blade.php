@@ -27,6 +27,7 @@
                             <div class="card-body">
                                 <h5 class="card-title text-success">{{ $card->cliente }}</h5>
                                 <h6 class="card-subtitle mb-2 text-muted">
+                                    <strong>Contrato:</strong>   
                                     <i class="fas fa-file-contract mr-1"></i>{{ $card->contrato }}
                                 </h6>
                                 <div class="kanban-card-details">
@@ -125,6 +126,10 @@
     
     .bg-atrasado {
         background-color: #dc3545;
+        color: white;
+    }
+    .bg-notificação{
+        background-color:rgb(225, 104, 23);
         color: white;
     }
 </style>
@@ -231,7 +236,7 @@ function formatCpfCnpj($cpfCnpj) {
         return substr($cpfCnpj, 0, 2) . '.' . 
                substr($cpfCnpj, 2, 3) . '.' . 
                substr($cpfCnpj, 5, 3) . '/' . 
-               substr($cpfCnpj, 8, 4) . '-' . 
+               substr($cpfCnpj, 8, 4) . '-' .   
                substr($cpfCnpj, 12, 2);
     }
 }

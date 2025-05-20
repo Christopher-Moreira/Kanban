@@ -18,3 +18,6 @@ Route::get('/kanban/{id}', [App\Http\Controllers\KanbanController::class, 'show'
 // Rotas de importação
 Route::get('/import', [ImportController::class, 'showImportForm'])->name('import');
 Route::post('/import', [ImportController::class, 'import'])->name('import');
+
+//visão para demonstração
+Route::get('/visual', [App\Http\Controllers\KanbanController::class, 'indexTwo'])->name('kanban.idea');

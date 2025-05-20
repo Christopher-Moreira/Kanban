@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\ImportedData;
+use App\Models\NotificationController;
 use Illuminate\Database\Eloquent\Model;
+
 
 
 class KanbanController extends Controller
@@ -22,6 +24,8 @@ class KanbanController extends Controller
             'Concluído',
             'Atrasado'
         ];
+        //Noticações
+        //$notifications = Notification::active()->with('card')->get();
         
         return view('kanban.index', compact('cards', 'statusColumns'));
     }
@@ -47,5 +51,23 @@ class KanbanController extends Controller
 
         return view('layouts.kanban', compact('dados'));
 
+    }
+    public function indexTwo()
+    {
+
+        // Agrupar os dados por status
+        $cards = ImportedData::all()->groupBy('status');
+        
+        // Definir os status possíveis que queremos exibir
+        $statusColumns = [
+            'Pendente',
+            'Em Andamento',
+            'Concluído',
+            'Atrasado'
+        ];
+        //Noticações
+        //$notifications = Notification::active()->with('card')->get();
+        
+        return view('kanban.idea', compact('cards', 'statusColumns'));
     }
 }

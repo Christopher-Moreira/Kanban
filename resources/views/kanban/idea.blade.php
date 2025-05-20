@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detalhes do Contrato - Visual</title>
+    <title>Detalhes do Contrato</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -12,8 +12,28 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
+        .contract-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .contract-item:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        .contract-total {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #1F6B2A;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid #1F6B2A;
+        }
+        
         .bg-sicoob {
-            background-color: #1F6B2A; /* Verde Sicoob */
+            background-color: #1F6B2A;
         }
 
         .info-section {
@@ -31,11 +51,10 @@
         }
 
         .sicoob-divider {
-            border-top: 2px solid #FFD100; /* Amarelo Sicoob */
+            border-top: 2px solid #FFD100;
             margin: 1rem 0;
         }
 
-        /* Cores das seções */
         .financial-section { border-left: 4px solid #1F6B2A; }
         .delay-section { border-left: 4px solid #FFD100; }
         .action-section { border-left: 4px solid #6c757d; }
@@ -92,11 +111,11 @@
                                 </div>
                             </div>
 
-                            <!-- Seção Contrato -->
+                            <!-- Seção Contrato  -->
                             <div class="col-md-6">
                                 <div class="info-section">
                                     <h5 class="sicoob-heading">
-                                        <i class="fas fa-file-signature mr-2"></i>Informações do Contrato
+                                        <i class="fas fa-file-signature mr-2"></i>Informações do Contrato    <- Vincular ao ID contrato each Contrato
                                     </h5>
                                     <hr class="sicoob-divider">
                                     <div class="info-item mb-3">
@@ -108,10 +127,22 @@
                                         <span>Crédito Consignado</span>
                                     </div>
                                     <div class="info-item mb-3">
-                                        <strong>Total de Contratos:</strong>
-                                        <span class="text-info font-weight-bold">
-                                            R$ 245.350,00
-                                        </span>
+                                        <strong>Valor do Contrato:</strong>
+                                        <span class="text-info font-weight-bold">R$ 385.350,00</span>
+                                    </div>
+                                    
+                                    <!-- Seção de Parcelas -->
+                                    <div class="parcelas-container mt-4">
+                                        <h6 class="sicoob-heading">
+                                            <i class="fas fa-calendar-alt mr-2"></i>Parcelas do Contrato
+                                        </h6>
+                                        <div id="parcelasList"></div>
+                                        <div id="parcelasTotal" class="contract-total text-end"></div>
+                                    </div>
+                                    
+                                    <div class="info-item mb-3">
+                                        <strong>Parcela em Atraso:</strong>
+                                        <span class="text-danger font-weight-bold">R$ 2.450,00</span>
                                     </div>
                                 </div>
                             </div>
@@ -246,12 +277,41 @@
         </div>
     </div>
 
-    <!-- Bootstrap JS + Popper.js -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
+        // Dados das parcelas
+        const parcelas = [
+            { numero: 'Parcela 1', valor: 61337.5 },
+            { numero: 'Parcela 2', valor: 80337.5 },
+            { numero: 'Parcela 3', valor: 121337.5 },
+            { numero: 'Parcela 4', valor: 311337.5 }
+        ];
+
+        // Função para exibir as parcelas
+        function exibirParcelas() {
+            const total = parcelas.reduce((acc, curr) => acc + curr.valor, 0);
+            const totalFormatado = new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            }).format(total);
+
+            const parcelasList = document.getElementById('parcelasList');
+            parcelasList.innerHTML = parcelas.map(ct => `
+                <div class="contract-item">
+                    <span>${ct.numero}</span>
+                    <span>${ct.valor.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}</span>
+                </div>
+            `).join('');
+
+            document.getElementById('parcelasTotal').textContent = `Total: ${totalFormatado}`;
+        }
+
+        // Executa ao carregar a página
+        window.onload = exibirParcelas;
+
         function showAlert() {
             const datetime = document.querySelector('input[type="datetime-local"]').value;
             alert(`Lembrete configurado para: ${new Date(datetime).toLocaleString()}`);
