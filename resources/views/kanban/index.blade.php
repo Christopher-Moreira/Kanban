@@ -25,7 +25,12 @@
                         @foreach($cards[$status] as $card)
                         <div class="kanban-card card mb-3" data-id="{{ $card->id }}">
                             <div class="card-body">
-                                <h5 class="card-title text-success">{{ $card->cliente }}</h5>
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h5 class="card-title text-success mb-0">{{ $card->cliente }}</h5>
+                                    @if(isset($card->tipo) && $card->tipo == 'ativo problematico')
+                                        <span class="ap-tag">AP</span>
+                                    @endif
+                                </div>
                                 <h6 class="card-subtitle mb-2 text-muted">
                                     <strong>Contrato:</strong>   
                                     <i class="fas fa-file-contract mr-1"></i>{{ $card->contrato }}
@@ -224,6 +229,43 @@
     
     .atraso-popup:hover .atraso-popup-content {
         display: block;
+    }
+    
+    /* Estilo para tag AP (Ativo Problemático) */
+    .ap-tag {
+        background-color: #6c2dc7; /* Roxo vibrante */
+        color: white;
+        font-weight: bold;
+        font-size: 12px;
+        padding: 3px 6px;
+        border-radius: 4px;
+        display: inline-block;
+        letter-spacing: 0.5px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        position: relative;
+    }
+    
+    .ap-tag:after {
+        content: 'Ativo Problemático';
+        position: absolute;
+        background: #6c2dc7;
+        color: white;
+        padding: 5px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        top: -5px;
+        right: -5px;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+        z-index: 100;
+    }
+    
+    .ap-tag:hover:after {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(-100%);
     }
     
     /* Status específicos para cores Sicoob */
