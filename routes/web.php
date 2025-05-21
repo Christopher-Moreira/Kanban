@@ -12,9 +12,6 @@ Route::get('/kanban', [App\Http\Controllers\KanbanController::class, 'index'])->
 Route::post('/kanban/update', [App\Http\Controllers\KanbanController::class, 'update'])->name('kanban.update');
 Route::get('/kanban/{id}', [App\Http\Controllers\KanbanController::class, 'show'])->name('kanban.show');
 
-//Change atribuiçao
-//Route::put('/atualizar-status/{id}', [KanbanController::class, 'atualizarStatus']);
-
 // Rotas de importação
 Route::get('/import', [ImportController::class, 'showImportForm'])->name('import');
 Route::post('/import', [ImportController::class, 'import'])->name('import');
@@ -23,7 +20,7 @@ Route::post('/import', [ImportController::class, 'import'])->name('import');
 //Route::get('/visual', [App\Http\Controllers\KanbanController::class, 'indexTwo'])->name('kanban.idea');
 
     //Rotas Reminder
-    // routes/web.php
+
 Route::post('/reminders', [ReminderController::class, 'store'])->name('reminders.store');
 Route::put('/reminders/{reminder}', [ReminderController::class, 'update'])->name('reminders.update');
 Route::delete('/reminders/{reminder}', [ReminderController::class, 'destroy'])->name('reminders.destroy');

@@ -7,15 +7,12 @@ use App\Models\ImportedData;
 use App\Models\NotificationController;
 use Illuminate\Database\Eloquent\Model;
 
-
-
 class KanbanController extends Controller
 {
     public function index()
     {
-
         // Agrupar os dados por status
-        $cards = ImportedData::all()->groupBy('status');
+        $cards = ImportedData::with('reminders')->get()->groupBy('status');
         
         // Definir os status possíveis que queremos exibir
         $statusColumns = [
@@ -44,19 +41,14 @@ class KanbanController extends Controller
     
     public function show($id)
     {
-        $card = ImportedData::findOrFail($id);
+        $card = ImportedData::with('reminders')->findOrFail($id);
         return view('kanban.show', compact('card'));
-
-        $dados = ImportedData::all(); // Pega todos os dados da tabela
-
-        return view('layouts.kanban', compact('dados'));
-
     }
+    
     public function indexTwo()
     {
-
         // Agrupar os dados por status
-        $cards = ImportedData::all()->groupBy('status');
+        $cards = ImportedData::with('reminders')->get()->groupBy('status');
         
         // Definir os status possíveis que queremos exibir
         $statusColumns = [

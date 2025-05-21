@@ -46,6 +46,6 @@ class ImportedData extends Model
 
     public function reminders()
     {
-        return $this->hasMany(Reminder::class);
+        return $this->hasMany(Reminder::class, 'imported_data_id');
     }
 }

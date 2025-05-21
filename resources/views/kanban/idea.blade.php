@@ -69,6 +69,7 @@
         .badge-em-andamento { background-color: #1F6B2A; color: white; }
         .badge-concluido { background-color: #28a745; color: white; }
         .badge-atrasado { background-color: #dc3545; color: white; }
+        .badge-problema { background-color: #6f42c1; color: white; }
     </style>
 </head>
 <body>
@@ -84,7 +85,9 @@
                         <h4 class="mb-0">
                             <i class="fas fa-file-contract mr-2"></i>Detalhes do Contrato
                         </h4>
-                        <span class="badge badge-status badge-atrasado">Atrasado</span>
+                        <div class="d-flex gap-2" id="badgeContainer">
+                            <span class="badge badge-status badge-atrasado">Atrasado</span>
+                        </div>
                     </div>
                     <div class="card-body">
                         <div class="row">
@@ -111,11 +114,11 @@
                                 </div>
                             </div>
 
-                            <!-- Seção Contrato  -->
+                            <!-- Seção Contrato -->
                             <div class="col-md-6">
                                 <div class="info-section">
                                     <h5 class="sicoob-heading">
-                                        <i class="fas fa-file-signature mr-2"></i>Informações do Contrato    <- Vincular ao ID contrato each Contrato
+                                        <i class="fas fa-file-signature mr-2"></i>Informações do Contrato
                                     </h5>
                                     <hr class="sicoob-divider">
                                     <div class="info-item mb-3">
@@ -126,10 +129,12 @@
                                         <strong>Produto:</strong> 
                                         <span>Crédito Consignado</span>
                                     </div>
+
+                                    <!--- Remoção Solicitada em Reunião
                                     <div class="info-item mb-3">
                                         <strong>Valor do Contrato:</strong>
                                         <span class="text-info font-weight-bold">R$ 385.350,00</span>
-                                    </div>
+                                    </div> -->
                                     
                                     <!-- Seção de Parcelas -->
                                     <div class="parcelas-container mt-4">
@@ -176,9 +181,7 @@
                                     <hr class="sicoob-divider">
                                     <div class="info-item mb-3">
                                         <strong>Dias de Atraso Parcela:</strong> 
-                                        <span class="text-danger font-weight-bold">
-                                            45 dias
-                                        </span>
+                                        <span id="diasAtraso" class="text-danger font-weight-bold"></span>
                                     </div>
                                 </div>
                             </div>
@@ -186,24 +189,32 @@
 
                         <!-- Seção Agendamento -->
                         <div class="row mt-4">
-                            <div class="col-md-6">
-                                <div class="info-section schedule-section">
-                                    <h5 class="sicoob-heading">
-                                        <i class="fas fa-clock mr-2"></i>Agendar Despertador
-                                    </h5>
-                                    <hr class="sicoob-divider">
-                                    <div class="form-group">
-                                        <label>Data/Hora do Lembrete:</label>
-                                        <input type="datetime-local" 
-                                               class="form-control"
-                                               value="2023-11-15T14:30">
-                                    </div>
-                                    <button class="btn btn-warning mt-2" onclick="showAlert()">
-                                        <i class="fas fa-bell mr-2"></i>Configurar Lembrete
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+    <div class="col-md-6">
+        <div class="info-section schedule-section">
+            <h5 class="sicoob-heading">
+                <i class="fas fa-clock mr-2"></i>Agendar Lembrete
+            </h5>
+            <hr class="sicoob-divider">
+            <form id="reminderForm" onsubmit="return submitReminder(event)">
+                <div class="form-group mb-3">
+                    <label>Nome do Lembrete:</label>
+                    <input type="text" class="form-control" id="reminderName" required>
+                </div>
+                <div class="form-group mb-3">
+                    <label>Descrição:</label>
+                    <textarea class="form-control" id="reminderDescription" rows="3" required></textarea>
+                </div>
+                <div class="form-group mb-3">
+                    <label>Data/Hora do Lembrete:</label>
+                    <input type="datetime-local" class="form-control" id="reminderTime" required>
+                </div>
+                <button type="submit" class="btn btn-warning mt-2">
+                    <i class="fas fa-bell mr-2"></i>Salvar Lembrete
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
 
                         <!-- Seção Ações -->
                         <div class="row mt-4">
@@ -282,6 +293,42 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
+
+        //Scripts de verdade
+        function submitReminder(event) {
+    event.preventDefault();
+    
+    const reminderData = {
+        name: document.getElementById('reminderName').value,
+        description: document.getElementById('reminderDescription').value,
+        reminder_time: document.getElementById('reminderTime').value,
+        _token: '{{ csrf_token() }}' // Se estiver usando Blade
+    };
+
+    fetch('/reminders', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify(reminderData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert('Lembrete agendado com sucesso!');
+        document.getElementById('reminderForm').reset();
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro ao agendar lembrete');
+    });
+    
+    return false;
+}
+
+
+//Scripts de demonstração
+
         // Dados das parcelas
         const parcelas = [
             { numero: 'Parcela 1', valor: 61337.5 },
@@ -289,6 +336,9 @@
             { numero: 'Parcela 3', valor: 121337.5 },
             { numero: 'Parcela 4', valor: 311337.5 }
         ];
+
+
+        const diasAtraso = 95;
 
         // Função para exibir as parcelas
         function exibirParcelas() {
@@ -309,8 +359,26 @@
             document.getElementById('parcelasTotal').textContent = `Total: ${totalFormatado}`;
         }
 
+        // Função para atualizar status de atraso
+        function atualizarStatusAtraso() {
+            // Atualiza display de dias
+            document.getElementById('diasAtraso').textContent = `${diasAtraso} dias`;
+            
+            // Adiciona badge Problema se necessário
+            if (diasAtraso > 90) {
+                const badgeContainer = document.getElementById('badgeContainer');
+                const problemaBadge = document.createElement('span');
+                problemaBadge.className = 'badge badge-status badge-problema';
+                problemaBadge.textContent = 'Problema';
+                badgeContainer.appendChild(problemaBadge);
+            }
+        }
+
         // Executa ao carregar a página
-        window.onload = exibirParcelas;
+        window.onload = function() {
+            exibirParcelas();
+            atualizarStatusAtraso();
+        };
 
         function showAlert() {
             const datetime = document.querySelector('input[type="datetime-local"]').value;
@@ -329,4 +397,4 @@
         }
     </script>
 </body>
-</html>
+</html> 
