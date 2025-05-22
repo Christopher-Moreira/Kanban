@@ -108,8 +108,10 @@
                                         <p class="mb-1">
                                             <i class="fas fa-calendar-times mr-1"></i>
                                             <strong>Notificação:</strong> 
-                                            <!-- ... (existing status indicators) ... -->
-                                        </p>
+                                        <span class="{{ $card->dias_atraso_parcela > 30 ? 'text-danger' : 'text-warning' }}">
+                                            {{ $card->dias_atraso_parcela }} dias
+                                        </span>
+                                    </p>
                                         <p class="mb-1">
                                             <i class="fas fa-money-bill-wave mr-1"></i>
                                             <strong>Saldo Devedor:</strong> 
@@ -150,17 +152,27 @@
                                         <a href="{{route('kanban.show', $card->id) }}" class="btn btn-sm btn-primary">
                                             <i class="fas fa-eye mr-1"></i>Detalhes
                                         </a>
-                                        <div class="dropdown">
-                                            <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" data-toggle="dropdown">
-                                                <i class="fas fa-exchange-alt mr-1"></i>Mover
-                                            </button>
-                                            <!-- ... (existing dropdown menu) ... -->
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" data-toggle="dropdown">
+                                            <i class="fas fa-exchange-alt mr-1"></i>Mover
+                                        </button>
+                                        <div class="dropdown-menu dropdown-menu-right">
+                                            @foreach($statusColumns as $moveStatus)
+                                                @if($moveStatus != $status)
+                                                <a class="dropdown-item move-card" href="#" 
+                                                   data-card-id="{{ $card->id }}" 
+                                                   data-status="{{ $moveStatus }}">
+                                                    Para {{ $moveStatus }}
+                                                </a>
+                                                @endif
+                                            @endforeach
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            @endforeach
-                        @else
+                        </div>
+                        @endforeach
+                    @else
                             <div class="text-center py-4 text-muted">
                                 <i class="fas fa-clipboard-list fa-2x mb-3"></i>
                                 <p>Nenhum contrato nesta coluna</p>
