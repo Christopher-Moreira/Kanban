@@ -551,8 +551,6 @@
     }
 </style>
 @endsection
-
-@section('scripts')
 @section('scripts')
 <script>
     $(document).ready(function() {
@@ -688,7 +686,7 @@
         }
 
         // Atualização de contadores
-        function updateBadgeCounters() {
+       function updateBadgeCounters() {
             $('.kanban-column').each(function() {
                 const status = $(this).data('status');
                 const count = status === 'Lembretes' 
@@ -768,6 +766,40 @@
                 }
             });
         }
+                // Event listener for moving cards
+$(document).on('click', '.move-card', async function(e) {
+    e.preventDefault();
+    const link = $(this);
+    const cardId = link.data('card-id');
+    const newStatus = link.data('status');
+
+    try {
+        const response = await $.ajax({
+            url: "{{ route('kanban.update') }}",
+            method: 'POST',
+            data: {
+                _token: "{{ csrf_token() }}",
+                card_id: cardId,
+                status: newStatus
+            }
+        });
+
+        if (response.success) {
+            const $card = $(`.kanban-card[data-id="${cardId}"]`);
+            const $targetColumn = $(`.kanban-column[data-status="${newStatus}"] .kanban-column-body`);
+            
+            // Animate card movement
+            $card.fadeOut(300, function() {
+                $(this).appendTo($targetColumn).fadeIn(300);
+            });
+
+            updateBadgeCounters();
+            showNotification('Success!', 'Card moved successfully!', 'success');
+        }
+    } catch (error) {
+        handleAjaxError(error, 'Error moving card');
+    }
+});
 
         // Inicializar aplicação
         init();

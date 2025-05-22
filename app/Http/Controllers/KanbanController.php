@@ -52,7 +52,7 @@ class KanbanController extends Controller
             }
         }
         
-        // Definir os status possíveis que queremos exibir
+        // Definir os status possíveis
         $statusColumns = [
             'Pendente',
             'Em Andamento',
@@ -87,7 +87,7 @@ class KanbanController extends Controller
         // Agrupar os dados por status
         $cards = ImportedData::with('reminders')->get()->groupBy('status');
         
-        // Definir os status possíveis que queremos exibir
+        // Definir os status possíveis
         $statusColumns = [
             'Pendente',
             'Em Andamento',
