@@ -17,4 +17,8 @@ class Reminder extends Model
     {
         return $this->belongsTo(ImportedData::class);
     }
+    public function importedData()
+{
+    return $this->belongsTo(ImportedData::class);
+}
 }
